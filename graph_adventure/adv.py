@@ -59,7 +59,6 @@ for d in roomGraph[0][1]:
 
 def get_path(id):
     unexplored = []
-    random_int = None
     
     # Add all unexplored rooms to list and select the first one
     for direction in traversal_graph[id]:
@@ -71,11 +70,10 @@ def get_path(id):
         return BFS_explore(id)
         
     else:
-        random_int = random.randint(0, len(unexplored)-1)
-        player.travel(unexplored[random_int])
-        print("moving to: ", unexplored[random_int], player.currentRoom.id)
+        player.travel(unexplored[-1])
+        print("moving to: ", unexplored[-1], player.currentRoom.id)
         # Add the direction to traversal_graph of room leaving
-        traversal_graph[id][unexplored[random_int]] = player.currentRoom.id
+        traversal_graph[id][unexplored[-1]] = player.currentRoom.id
         # Add the newly discovered room and its directions to traversal_graph
         # If that id does not exist in the graph than it hasn't been assigned directions
         if player.currentRoom.id not in traversal_graph:
@@ -83,9 +81,9 @@ def get_path(id):
             for d in player.currentRoom.getExits():
                 traversal_graph[player.currentRoom.id][d] = '?'
         # Add the previous room (id) to the current rooms traversal_graph
-        traversal_graph[player.currentRoom.id][reverse_dir(unexplored[random_int])] = id
+        traversal_graph[player.currentRoom.id][reverse_dir(unexplored[-1])] = id
 
-        return [unexplored[random_int]]
+        return [unexplored[-1]]
 
 def BFS_explore(start_id):
     unexplored = []
