@@ -3,6 +3,20 @@ from player import Player
 from world import World
 
 import random
+import time
+
+class Queue():
+    def __init__(self):
+        self.queue = []
+    def enqueue(self, value):
+        self.queue.append(value)
+    def dequeue(self):
+        if self.size() > 0:
+            return self.queue.pop(0)
+        else:
+            return None
+    def size(self):
+        return len(self.queue)
 
 # Load world
 world = World()
@@ -18,10 +32,145 @@ roomGraph={494: [(1, 8), {'e': 457}], 492: [(1, 20), {'e': 400}], 493: [(2, 5), 
 world.loadGraph(roomGraph)
 world.printRooms()
 player = Player("Name", world.startingRoom)
+prev_room = None
 
+# Add starting room to queue
+    
+# Check for possible connecting rooms
+# If those rooms are not in visited, add to q
+
+def reverse_dir(dir):
+    if dir == 'n':
+        return 's'
+    if dir == 's':
+        return 'n'
+    if dir == 'e':
+        return 'w'
+    if dir == 'w':
+        return 'e'
+
+def rank_direction(l):
+    if 'w' in l:
+        return 'w'
+    if 's' in l:
+        return 's'
+    if 'n' in l:
+        return 'n'
+    if 'e' in l:
+        return 'e'
+
+# w, s, n, e : 977
+# s, w, n, e : 977
+
+traversal_graph = {}
+# Creates an entry in traversal_graph of the current room and its directions of travel
+traversal_graph[0] = {}
+# Adds the current room and its adjacent room directions to traversal graph (aka: visited)
+for d in roomGraph[0][1]:
+    traversal_graph[0][d] = '?'
+
+def get_path(id):
+    unexplored = []
+    
+    # Add all unexplored rooms to list and select the first one
+    for direction in traversal_graph[id]:
+        if traversal_graph[id][direction] == '?':
+            unexplored.append(direction)
+    # time.sleep(.5)
+    print("UNEXPLORED: ", unexplored)
+    if len(unexplored) < 1:
+        return BFS_explore(id)
+        
+    else:
+        player.travel(rank_direction(unexplored))
+        print("moving to: ", rank_direction(unexplored), player.currentRoom.id)
+        # Add the direction to traversal_graph of room leaving
+        traversal_graph[id][rank_direction(unexplored)] = player.currentRoom.id
+        # Add the newly discovered room and its directions to traversal_graph
+        # If that id does not exist in the graph than it hasn't been assigned directions
+        if player.currentRoom.id not in traversal_graph:
+            traversal_graph[player.currentRoom.id] = {}
+            for d in player.currentRoom.getExits():
+                traversal_graph[player.currentRoom.id][d] = '?'
+        # Add the previous room (id) to the current rooms traversal_graph
+        traversal_graph[player.currentRoom.id][reverse_dir(rank_direction(unexplored))] = id
+
+        return [rank_direction(unexplored)]
+
+def BFS_explore(start_id):
+    unexplored = []
+    # Create an empty queue and enqueue the starting id
+    q = Queue()
+    q.enqueue( [(start_id, '')] )
+    visited = set()
+    # We'll need to check if the current room has directions to undiscovered room(s)
+    while q.size() > 0:
+        path = q.dequeue()
+        room_id = path[-1][0]
+        print("VISITED: ", visited)
+        print("+++++++++++++++++++++>>>>>>>>>>", path, room_id)
+        for direction in traversal_graph[room_id]:
+            if traversal_graph[room_id][direction] == '?':
+                unexplored.append(direction)
+                # time.sleep(.5)
+                print("???????????????")
+        # If we don't find an undiscovered room...
+        # print("length of unexplored", len(unexplored))
+        if len(unexplored) < 1:
+            visited.add(room_id)
+            for direction in traversal_graph[room_id]:
+                # time.sleep(1)
+                print('tgrid', traversal_graph[room_id], traversal_graph[room_id][direction])
+                new_path = path.copy()
+                if traversal_graph[room_id][direction] not in visited:
+                    new_path.append((traversal_graph[room_id][direction], direction))
+                    print("NEW_PATH: ", new_path)
+                    q.enqueue(new_path)
+        else:
+            print("this should only print if found room with ?", unexplored)
+            print('----->', room_id)
+            path_directions = []
+            for i in path:
+                if i[1] is not '':
+                    path_directions += i[1]
+                    player.travel(i[1])
+                    print("moving to :", i[1], player.currentRoom.id)
+
+            print("PATH_DIRECTIONS: ", path_directions)
+            return path_directions
+
+
+
+    # print(unexplored[0])
+    # prev_room = player.currentRoom.id
+    # player.travel(unexplored[0])
 
 # FILL THIS IN
-traversalPath = ['n', 's']
+def traverse_maze():
+
+    traversalPath = []
+
+    while len(traversal_graph) < len(roomGraph):
+        for i in get_path(player.currentRoom.id):
+            traversalPath += i
+        # time.sleep(.02)
+        print("---------------------------------------------------------------------------traversal_graph length: ", len(traversal_graph))
+        print("roomGraph length: ", len(roomGraph))
+        # traversalPath += get_path(player.currentRoom.id)
+        # print("ROOMID: ", player.currentRoom.id)
+    # if get_path(player.currentRoom.id) is not -1:
+
+
+
+    print("TRAVERSAL_GRAPH: ", traversal_graph)
+    print("_-_-_-_->> ", player.currentRoom.id)
+    print("traversal_graph length: ", len(traversal_graph))
+    print("roomGraph length: ", len(roomGraph))
+    print("TRAVERSALPATH: ", traversalPath)
+
+    return traversalPath
+
+traversalPath = traverse_maze()
 
 
 # TRAVERSAL TEST
